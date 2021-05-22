@@ -16,14 +16,7 @@ const NewsListBlock = styled.div`
   }
 `;
 
-const sampleArticle = {
-  title: 'タイトル',
-  description: '内容',
-  url: 'https://google.com',
-  urlToImage: 'https://via.placeholder.com/160',
-};
-
-const NewsList = () => {
+const NewsList = ({ category }) => {
   const [articles, setArticles] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,8 +26,12 @@ const NewsList = () => {
       setLoading(true);
 
       try {
+        const query = category === 'all' ? '' : 'category=' + category + '&';
+        console.debug(query);
         const response = await axios.get(
-          'https://newsapi.org/v2/top-headlines?country=jp&apiKey=5890b3ef92f143e9aee1fb5093f99689',
+          'https://newsapi.org/v2/top-headlines?country=jp&' +
+            query +
+            'apiKey=5890b3ef92f143e9aee1fb5093f99689',
         );
 
         // articlesをセット
@@ -47,7 +44,7 @@ const NewsList = () => {
     };
 
     fetchData();
-  }, []); // 初期1回だけ
+  }, [category]); // 初期1回だけ
 
   if (loading) {
     return <NewsListBlock>Loading...</NewsListBlock>;
