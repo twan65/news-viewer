@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import NewsItem from './NewsItem';
 import axios from 'axios';
+import usePromise from '../lib/usePromise';
 
 const NewsListBlock = styled.div`
   box-sizing: border-box;
@@ -17,43 +18,27 @@ const NewsListBlock = styled.div`
 `;
 
 const NewsList = ({ category }) => {
-  const [articles, setArticles] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, response, error] = usePromise(() => {
+    const query = category === 'all' ? '' : `&category=${category}`;
+    return axios.get(
+      `https://newsapi.org/v2/top-headlines?country=kr${query}&apiKey=5890b3ef92f143e9aee1fb5093f99689`,
+    );
+  }, [category]);
 
-  // コンポーネントが画面に表示される時点にAPIを呼び出すために使用
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-
-      try {
-        const query = category === 'all' ? '' : 'category=' + category + '&';
-        console.debug(query);
-        const response = await axios.get(
-          'https://newsapi.org/v2/top-headlines?country=jp&' +
-            query +
-            'apiKey=5890b3ef92f143e9aee1fb5093f99689',
-        );
-
-        // articlesをセット
-        setArticles(response.data.articles);
-      } catch (e) {
-        console.log(e);
-      }
-
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [category]); // 初期1回だけ
-
+  // 대기 중일 때
   if (loading) {
     return <NewsListBlock>Loading...</NewsListBlock>;
   }
 
-  // まだarticlesがセットされたのかを確認
-  if (!articles) {
+  // まだ、レスポンスが設定されていない場合
+  if (!response) {
     return null;
   }
+  if (error) {
+    return <NewsListBlock>エラー発生</NewsListBlock>;
+  }
+
+  const { articles } = response.data;
 
   return (
     <NewsListBlock>
